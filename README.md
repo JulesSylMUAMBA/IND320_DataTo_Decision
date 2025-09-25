@@ -41,7 +41,7 @@ The Streamlit app is structured into four pages:
 
 ## Links
 - **GitHub Repository:** [IND320_DataTo_Decision](https://github.com/JulesSylMUAMBA/IND320_DataTo_Decision)  
-- **Streamlit App:** [share.streamlit.io/user/julessylmuamba](https://share.streamlit.io/user/julessylmuamba)  
+- **Streamlit App:** [https://ind320datatodecision-fnmdxfu8zeflxwwdgdjvmx.streamlit.app/s)  
 
 ---
 
