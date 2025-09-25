@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("open-meteo-subset.csv")
+    # CSV is in the parent folder of "pages/"
+    file_path = os.path.join(os.path.dirname(__file__), "..", "open-meteo-subset.csv")
+    df = pd.read_csv(file_path)
     df["time"] = pd.to_datetime(df["time"])
     return df
 
@@ -14,7 +17,7 @@ st.title("Extra Analysis – Correlation Matrix")
 
 st.write("""
 This page shows the correlation matrix between the different variables
-(temperature, precipitation, wind speed, wind gusts, and wind direction).
+(temperature, precipitation, wind speed, wind gusts, and wind direction).  
 Correlations range from -1 (perfect negative) to +1 (perfect positive).
 """)
 

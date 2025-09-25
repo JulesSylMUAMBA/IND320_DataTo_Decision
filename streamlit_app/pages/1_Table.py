@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
+import os
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("open-meteo-subset.csv")
-
+    # Load CSV from the same folder as the script (streamlit_app/)
+    file_path = os.path.join(os.path.dirname(__file__), "..", "open-meteo-subset.csv")
+    return pd.read_csv(file_path)
 
 df = load_data()
 

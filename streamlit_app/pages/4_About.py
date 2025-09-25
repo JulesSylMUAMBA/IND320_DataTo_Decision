@@ -13,7 +13,7 @@ It demonstrates how to:
 ---
 
 ### Author
-- **Name:** Jules Syl Muamba  
+- **Name:** Jules Sylvain Muamba Mvele
 - **Institution:** NMBU / ESILV Exchange  
 - **Course:** IND320 – Data to Decision  
 
@@ -21,7 +21,7 @@ It demonstrates how to:
 
 ### Links
 - **GitHub Repository:** [IND320_DataTo_Decision](https://github.com/JulesSylMUAMBA/IND320_DataTo_Decision)  
-- **Streamlit App:** [share.streamlit.io/user/julessylmuamba](https://share.streamlit.io/user/julessylmuamba)  
+- **Streamlit App:** [IND320 Streamlit App](https://ind320datatodecision-fnmdxfu8zeflxwwdgdjvmx.streamlit.app/)  
 
 ---
 
@@ -31,5 +31,4 @@ The app uses:
 - `matplotlib` for visualization  
 - Streamlit’s `LineChartColumn` for mini-plots in tables  
 - `@st.cache_data` to improve performance when loading the dataset  
-
 """)
