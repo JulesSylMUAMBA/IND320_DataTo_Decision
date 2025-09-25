@@ -1,5 +1,3 @@
-# IND320_DataTo_Decision
-Here my Data to Decision repository
 # IND320 – Data to Decision
 
 This repository contains my work for the IND320 course at NMBU.  
