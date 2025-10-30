@@ -47,14 +47,21 @@ with right:
     if not groups:
         st.warning("No production groups found in MongoDB.")
     else:
-        selected_groups = st.multiselect("Select groups:", groups, default=groups[:3])
-        year = st.selectbox("Year:", [2021, 2022, 2023, 2024, 2025], index=1)
-        month = st.selectbox("Month:", list(range(1, 13)), index=9, format_func=lambda m: f"{m:02d}")
+        # --- Use pills if available (Streamlit >= 1.33); otherwise fall back to multiselect ---
+        use_pills = hasattr(st, "pills")
+        if use_pills:
+            selected_groups = st.pills("Select groups:", groups, selection=groups[:3])
+        else:
+            selected_groups = st.multiselect("Select groups:", groups, default=groups[:3])
+
+        year = st.selectbox("Year:", [2021, 2022, 2023, 2024, 2025], index=0)  # default to 2021 now
+        month = st.selectbox("Month:", list(range(1, 13)), index=0, format_func=lambda m: f"{m:02d}")
 
         if selected_groups:
             @st.cache_data(show_spinner=False, ttl=300)
             def cached_line(pa: str, gs: tuple, yy: int, mm: int) -> pd.DataFrame:
                 return fetch_line_data(pa, list(gs), yy, mm)
+
             df_line = cached_line(price_area, tuple(selected_groups), year, month)
             if df_line.empty:
                 st.info("No data found for the selected filters.")
@@ -69,6 +76,7 @@ with right:
                     hovermode="x unified",
                     template="plotly_white",
                     height=480,
+                    margin=dict(l=10, r=10, t=60, b=10),
                 )
                 st.plotly_chart(fig_line, use_container_width=True)
         else:
