@@ -1,34 +1,40 @@
+# streamlit_app/Home.py
 import streamlit as st
-import pandas as pd
-import os
 
-st.set_page_config(page_title="IND320 Project", layout="wide")
+st.set_page_config(page_title="IND320 Project – Part 3", layout="wide")
 
-# Function to load data safely from the same folder as Home.py
-@st.cache_data
-def load_data():
-    file_path = os.path.join(os.path.dirname(__file__), "open-meteo-subset.csv")
-    return pd.read_csv(file_path)
+st.title("IND320 – Data to Decision (Part 3)")
+st.caption("NMBU / ESILV — Data Quality, Open-Meteo (ERA5), Elhub STL & Spectrogram, SPC/LOF")
 
-df = load_data()
+# --- Global context preview (if set by page 2) ---
+area = st.session_state.get("price_area")
+if area:
+    st.info(f"Current price area: **{area}**. Change it on the 'Production Analysis' page.")
 
-# Sidebar
-st.sidebar.title("Navigation")
-st.sidebar.markdown("Use the sidebar to navigate between pages.")
+st.markdown("""
+### What’s inside
+- **Page 2 – Production Analysis (global selector)**: choose the **price area** once; other pages reuse it.
+- **Page 3 – STL & Spectrogram (new A)**: STL decomposition and time–frequency analysis on **Elhub** data.
+- **Page 6 – Outliers & Anomalies (new B)**: **Temperature SPC (DCT)** and **Precipitation LOF** from **Open-Meteo ERA5**.
+- Plus: table/plots/extra/about inherited from earlier parts.
 
-# Main content
-st.title("IND320 – Data to Decision")
-st.write("""
-Welcome to my Streamlit project for the IND320 course.  
-My name is **Jules**, and I am excited to share my work with you.  
-
-This app allows you to explore weather data interactively:
-- **Page 1 (Table):** Dataset with mini time series  
-- **Page 2 (Plots):** Interactive plots with filters and smoothing  
-- **Page 3 (Extra):** Correlation analysis  
-- **Page 4 (About):** Documentation and links  
+### Notes
+- Meteorology now comes from the **Open-Meteo ERA5 archive API** (no CSV).
+- Elhub data are read from **MongoDB** (UTC timestamps).
 """)
 
-# Just to prove data is loaded (optional small preview)
-st.write("### Preview of the dataset")
-st.dataframe(df.head())
+with st.expander("Links"):
+    st.markdown("""
+- GitHub repo: **JulesSylMUAMBA/IND320_DataTo_Decision** (branch `part3`)
+- Streamlit pages order (requested): **1, 4, new A, 2, 3, new B, 5**  
+  Here mapped to files:
+  - `1_Table.py`
+  - `2_Production_Analysis.py`  ← *(global area selector)*
+  - `3_STL_Spectrogram.py`      ← *(new A)*
+  - `4_Plots.py`
+  - `5_Extra.py`
+  - `6_Outliers_Anomalies.py`   ← *(new B)*
+  - `7_About.py`
+""")
+
+st.success("Use the left sidebar to navigate between pages.")
