@@ -45,9 +45,13 @@ with left:
                 df_pie,
                 values="quantity_kwh",
                 names="production_group",
-                title=f"Total production by group – {area}",
                 hole=0.3,
             )
+            fig_pie.update_layout(
+                title=None,
+                margin=dict(t=60),
+            )
+
             fig_pie.update_traces(textinfo="percent+label")
             st.plotly_chart(fig_pie, use_container_width=True)
 
@@ -85,8 +89,10 @@ with right:
         if isinstance(selected_groups, str):
             selected_groups = [selected_groups]
 
-        year = st.selectbox("Year:", [2021, 2022, 2023, 2024, 2025], index=0)
+
         month = st.selectbox("Month:", list(range(1, 13)), index=0, format_func=lambda m: f"{m:02d}")
+        year = 2021  # ask by review
+
 
         if selected_groups:
             @st.cache_data(show_spinner=False, ttl=300)
