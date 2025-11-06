@@ -49,11 +49,12 @@ with left:
             )
             fig_pie.update_layout(
                 title=None,
-                margin=dict(t=60),
+                margin=dict(t=100, b=50, l=10, r=10),
+                height=500,
             )
-
             fig_pie.update_traces(textinfo="percent+label")
             st.plotly_chart(fig_pie, use_container_width=True)
+
 
 with right:
     st.subheader("Hourly production by group (Line)")
