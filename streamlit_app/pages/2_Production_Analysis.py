@@ -15,22 +15,30 @@ from utils import (
 st.title("Production Analysis (Elhub)")
 st.caption("Data source: Elhub hourly production per group. Stored in MongoDB (UTC).")
 
-# --- Global area selector (shared with other pages) ---
-default_area = st.session_state.get("price_area", "NO5")
-area = st.sidebar.selectbox(
-    "Price area",
-    list(CITY_MAP.keys()),
-    index=list(CITY_MAP.keys()).index(default_area),
-)
-st.session_state["price_area"] = area
-st.caption(f"Current area: **{area}** – {CITY_MAP[area]['city']}")
 
-left, right = st.columns(2)
+
+
+# --- Split layout: more space on the left for the pie chart ---
+left, right = st.columns([1.3, 0.9])  # wider left column
 
 with left:
+    # --- Radio selector for price area (as required by assignment) ---
     st.subheader("Total production by group (Pie)")
-    areas = fetch_price_areas()
-    if not areas:
+    st.caption("Select a price area to visualize total annual production.")
+    areas = list(CITY_MAP.keys())
+    default_area = st.session_state.get("price_area", "NO5")
+    area = st.radio(
+        "Choose price area:",
+        areas,
+        index=areas.index(default_area),
+        horizontal=True
+    )
+    st.session_state["price_area"] = area
+    st.caption(f"Current area: **{area}** – {CITY_MAP[area]['city']}")
+
+    # --- Fetch and plot pie chart ---
+    available_areas = fetch_price_areas()
+    if not available_areas:
         st.warning("No price areas found in MongoDB.")
     else:
         @st.cache_data(show_spinner=False, ttl=300)
@@ -38,6 +46,7 @@ with left:
             return fetch_pie_data(pa)
 
         df_pie = cached_pie(area)
+        
         if df_pie.empty:
             st.info("No data for the selected price area.")
         else:
@@ -47,81 +56,115 @@ with left:
                 names="production_group",
                 hole=0.3,
             )
-            fig_pie.update_layout(
-                title=None,
-                margin=dict(t=100, b=50, l=10, r=10),
-                height=500,
+
+           
+            fig_pie.update_traces(
+                textinfo="percent+label",
+                textposition="inside",
+                hovertemplate="%{label}<br>%{value:.0f} kWh (%{percent})<extra></extra>",
+                name=""  
             )
-            fig_pie.update_traces(textinfo="percent+label")
+            fig_pie.update_layout(
+                title_text="",             
+                showlegend=True,          
+                margin=dict(t=80, b=10, l=20, r=10),
+                height=350,
+            )
+
+            
+            for tr in fig_pie.data:
+                tr.name = ""  # ou "Production"
+
             st.plotly_chart(fig_pie, use_container_width=True)
 
 
 with right:
     st.subheader("Hourly production by group (Line)")
+
+    # 1) Fetch available production groups (excluding wildcard)
     groups = [g for g in fetch_groups() if g != "*"]
     if not groups:
         st.warning("No production groups found in MongoDB.")
     else:
-        # --- Group selection UI (robust across Streamlit versions) ---
-        selected_groups = None
-
-        if hasattr(st, "pills"):
-            # Try with multi-selection enabled (some versions require it for list defaults)
-            try:
-                selected_groups = st.pills(
-                    "Select groups:", groups,
-                    default=groups[:3],
-                    selection_mode="multi"
-                )
-            except TypeError:
-                # Older signature without selection_mode
-                try:
-                    selected_groups = st.pills("Select groups:", groups, default=groups[:3])
-                except Exception:
-                    selected_groups = None
-            except Exception:
-                selected_groups = None
-
-        # Fallback to multiselect if pills is unavailable or failed
-        if selected_groups is None:
-            selected_groups = st.multiselect("Select groups:", groups, default=groups[:3])
-
-        # Normalize to list if a single string is returned
-        if isinstance(selected_groups, str):
-            selected_groups = [selected_groups]
-
-
-        month = st.selectbox("Month:", list(range(1, 13)), index=0, format_func=lambda m: f"{m:02d}")
-        year = 2021  # ask by review
-
-
-        if selected_groups:
-            @st.cache_data(show_spinner=False, ttl=300)
-            def cached_line(pa: str, gs: tuple, yy: int, mm: int) -> pd.DataFrame:
-                return fetch_line_data(pa, list(gs), yy, mm)
-
-            df_line = cached_line(area, tuple(selected_groups), year, month)
-            if df_line.empty:
-                st.info("No data found for the selected filters.")
-            else:
-                fig_line = go.Figure()
-                for col in df_line.columns:
-                    fig_line.add_trace(
-                        go.Scatter(x=df_line.index, y=df_line[col], mode="lines", name=col)
-                    )
-                fig_line.update_layout(
-                    title=f"Hourly production – {area} – {year}-{month:02d} (UTC)",
-                    xaxis_title="Time",
-                    yaxis_title="Quantity (kWh)",
-                    hovermode="x unified",
-                    template="plotly_white",
-                    height=480,
-                    margin=dict(l=10, r=10, t=60, b=10),
-                )
-                st.plotly_chart(fig_line, use_container_width=True)
+        # 2) Required by assignment: use st.pills (no fallback)
+        if not hasattr(st, "pills"):
+            st.error("This app requires Streamlit ≥ 1.38 for st.pills (as per assignment).")
         else:
-            st.info("Select at least one production group.")
+            # Multi-selection of production groups via pills
+            selected_groups = st.pills(
+                "Select groups:",
+                options=groups,
+                default=groups[:3],
+                selection_mode="multi"
+            )
 
+            # Ensure it's always a list
+            if isinstance(selected_groups, str):
+                selected_groups = [selected_groups]
+
+            # 3) Month selector (year fixed as per assignment feedback)
+            month = st.selectbox(
+                "Month:",
+                list(range(1, 13)),
+                index=0,
+                format_func=lambda m: f"{m:02d}"
+            )
+            year = 2021  # fixed year
+
+            # 4) Show current filters clearly (combine price area + groups + month)
+            st.caption(
+                f"Area: **{area}** – {CITY_MAP[area]['city']} • "
+                f"Month: **{year}-{month:02d}** • "
+                f"Groups: {', '.join(selected_groups) if selected_groups else '—'}"
+            )
+
+            # 5) Fetch and plot line chart "like in the Jupyter notebook"
+            if selected_groups:
+                @st.cache_data(show_spinner=False, ttl=300)
+                def cached_line(pa: str, gs: tuple, yy: int, mm: int) -> pd.DataFrame:
+                    return fetch_line_data(pa, list(gs), yy, mm)
+
+                df_line = cached_line(area, tuple(selected_groups), year, month)
+
+                if df_line.empty:
+                    st.info("No data found for the selected filters.")
+                else:
+                    # Ensure index is datetime (for better x-axis formatting)
+                    if not pd.api.types.is_datetime64_any_dtype(df_line.index):
+                        try:
+                            df_line.index = pd.to_datetime(df_line.index, utc=True)
+                        except Exception:
+                            pass
+
+                    # Create one line per production group
+                    fig_line = go.Figure()
+                    for col in df_line.columns:
+                        fig_line.add_trace(
+                            go.Scatter(
+                                x=df_line.index,
+                                y=df_line[col],
+                                mode="lines",
+                                name=col
+                            )
+                        )
+
+                    # Improve layout and match notebook style
+                    fig_line.update_layout(
+                        title=f"Hourly prod of {CITY_MAP[area]['city']} in {year}-{month:02d} [UTC]",
+                        xaxis_title="Time (UTC)",
+                        yaxis_title="Quantity (kWh)",
+                        hovermode="x unified",
+                        template="plotly_white",
+                        height=480,
+                        margin=dict(l=10, r=10, t=60, b=10),
+                    )
+
+                    # Display chart
+                    st.plotly_chart(fig_line, use_container_width=True)
+            else:
+                st.info("Select at least one production group.")
+
+# --- Data explanation ---
 with st.expander("Data & methodology"):
     st.markdown("""
 - **Source:** Elhub (hourly production per group).
